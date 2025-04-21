@@ -156,7 +156,6 @@ describe('Domain API Test', () => {
 * **도커라이즈**
   * 개발용: `dockerfile`
   * 운영용: `production.dockerfile`
-  * 내부용: `internal.dockerfile`
 
 * **환경 설정**
   * Spring Cloud Config 사용
