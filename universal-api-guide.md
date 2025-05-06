@@ -50,6 +50,65 @@
   * 공통 타입은 `@types` 디렉토리에 정의
   * 도메인별 타입은 해당 도메인 디렉토리 내 `types.ts`에 정의
 
+* **스키마 검증(Schema Validation)**
+  * Fastify는 내부적으로 ajv(Another JSON Schema Validator) 라이브러리를 사용하여 요청/응답에 대한 유효성을 검사
+  * 모든 API 응답은 JSON Schema로 정의하여 검증
+    - 응답 스키마를 정의할 경우, 스키마에 정의되지 않은 프로퍼티는 response에서 제외됨
+  * `schema` 디렉토리에 도메인별로 스키마 정의
+  * $id를 사용하여, 재사용성과 참조를 위한 식별자 지정 가능
+
+  ```typescript
+  // 스키마 정의 예시
+  // src/schema/page.ts
+  export const PageWithCuration = {
+    $id: 'pageWithCuration',
+    type: 'object',
+    properties: {
+      ...ObjectUtil.omit(Page.properties, ['headJson', 'mainJson']),
+      currentPageState: { type: 'string' },
+      curationGroups: {
+        type: 'array',
+        items: { $ref: 'curationGroup#' },
+      },
+    },
+  };
+
+  // 스키마 등록 예시
+  // src/schema/index.ts
+  export const registerSchema = (server: any) => {
+    server.addSchema(PageWithCuration);
+  };
+
+  // 스키마 참조 예시
+  // src/routes/page-v2/page.schema.ts
+  export const getPreviewPageSchema = {
+    tags: ['page', 'v2'],
+    summary: '페이지 미리보기',
+    description: 'id로 페이지 미리보기를 지원합니다. curation 데이터도 포함됩니다.',
+    params: {
+      type: 'object',
+      properties: {
+        id: { type: 'integer', description: 'page id' },
+      },
+      required: ['id'],
+    },
+    querystring: {
+      type: 'object',
+      properties: {
+        language: { type: 'string', description: `${Object.values(CustomerLanguageCode)}` },
+      },
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          data: { $ref: 'pageWithCuration#' },
+        },
+      },
+    },
+  };
+  ```
+
 * **코드 포매팅**
   ```javascript
   // .prettierrc.js
